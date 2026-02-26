@@ -1,0 +1,1363 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSINT Panel - Cybersecurity Toolkit</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* cosmic dark gradient for space theme */
+            background: radial-gradient(circle at bottom, #0d1b2a, #000);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .nav-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.4);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.active {
+            background: #76b5c5;
+            color: #0d1b2a;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        .panels {
+            display: grid;
+            gap: 20px;
+        }
+
+        .panel {
+            background: rgba(255,255,255,0.05);
+            color: #e0e0e0;
+            border-radius: 12px;
+            padding: 30px;
+            display: none;
+            opacity: 0;
+            animation: slideIn 0.5s ease-out forwards;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .panel.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .panel h2 {
+            color: #76b5c5;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 2px solid #76b5c5;
+            padding-bottom: 10px;
+        }
+
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .tool-card {
+            background: rgba(255,255,255,0.1);
+            color: #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .tool-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button.btn {
+            background: linear-gradient(135deg, #76b5c5 0%, #34a0a4 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            width: 100%;
+        }
+
+        button.btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button.btn:active {
+            transform: translateY(0);
+        }
+
+        .result-box {
+            background: #f0f0f0;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .success {
+            background: #d4edda;
+            border-left-color: #28a745;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+            color: #856404;
+        }
+
+        .info {
+            background: #d1ecf1;
+            border-left-color: #17a2b8;
+            color: #0c5460;
+        }
+
+        .strength-meter {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .strength-meter-fill {
+            height: 100%;
+            width: 0;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .strength-weak { width: 25%; background: #dc3545; }
+        .strength-fair { width: 50%; background: #ffc107; }
+        .strength-good { width: 75%; background: #17a2b8; }
+        .strength-strong { width: 100%; background: #28a745; }
+
+        .feature-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            color: #555;
+            border-bottom: 1px solid #eee;
+        }
+
+        .feature-list li:before {
+            content: "✓ ";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            opacity: 0.8;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin: 5px 5px 5px 0;
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .tool-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌌 Comet OS • OSINT Panel</h1>
+            <p>Milky Way Terminal ‑ Professional Cybersecurity Reconnaissance Toolkit</p>
+        </header>
+
+        <div class="nav-tabs">
+            <button class="nav-btn active" onclick="switchPanel('password')">🔐 Password Tools</button>
+            <button class="nav-btn" onclick="switchPanel('geosint')">🗺️ GeoSINT</button>
+            <button class="nav-btn" onclick="switchPanel('hash')">#️⃣ Hash Tools</button>
+            <button class="nav-btn" onclick="switchPanel('validators')">✓ Validators</button>
+            <button class="nav-btn" onclick="switchPanel('network')">🌐 Network Tools</button>
+            <button class="nav-btn" onclick="switchPanel('encoding')">🔤 Encoding/Decoding</button>
+        </div>
+
+        <div class="panels">
+            <!-- Password Tools Panel -->
+            <div id="password" class="panel active">
+                <h2>🔐 Password Security Tools</h2>
+                <div class="tool-grid">
+                    <div class="tool-card">
+                        <h3>Password Strength Tester</h3>
+                        <div class="form-group">
+                            <label for="pwd-input">Enter Password:</label>
+                            <input type="password" id="pwd-input" placeholder="Enter password to test..." oninput="checkPasswordStrength()">
+                        </div>
+                        <div class="strength-meter">
+                            <div id="strength-meter-fill" class="strength-meter-fill"></div>
+                        </div>
+                        <div id="pwd-result" class="result-box" style="display: none;"></div>
+                    </div>
+
+                    <div class="tool-card">
+                        <h3>Password Generator</h3>
+                        <div class="form-group">
+                            <label for="pwd-length">Length:</label>
+                            <input type="number" id="pwd-length" value="16" min="8" max="128">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="pwd-uppercase" checked> Uppercase
+                            </label>
+                            <label>
+                                <input type="checkbox" id="pwd-lowercase" checked> Lowercase
+                            </label>
+                            <label>
+                                <input type="checkbox" id="pwd-numbers" checked> Numbers
+                            </label>
+                            <label>
+                                <input type="checkbox" id="pwd-symbols" checked> Symbols
+                            </label>
+                        </div>
+                        <button class="btn" onclick="generatePassword()">Generate Password</button>
+                        <div id="pwd-generated" class="result-box" style="display: none;"></div>
+                    </div>
+
+                    <div class="tool-card">
+                        <h3>Password Breach Checker</h3>
+                        <div class="form-group">
+                            <label for="breach-email">Email Address:</label>
+                            <input type="email" id="breach-email" placeholder="Enter email to check...">
+                        </div>
+                        <button class="btn" onclick="checkBreachDatabase()">Check Breaches</button>
+                        <div id="breach-result" class="result-box" style="display: none;"></div>
+                    </div>
+
+                    <div class="tool-card">
+                        <h3>Password Tips & Best Practices</h3>
+                        <ul class="feature-list">
+                            <li>Use minimum 12 characters long</li>
+                            <li>Mix uppercase, lowercase, numbers, symbols</li>
+                            <li>Avoid dictionary words and names</li>
+                            <li>Don't reuse passwords across sites</li>
+                            <li>Use passphrases for better memory</li>
+                            <li>Enable two-factor authentication</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GeoSINT Panel -->
+            <div id="geosint" class="panel">
+                <h2>🗺️ Geolocation Intelligence Tools</h2>
+                <div class="tool-grid">
+                    <div class="tool-card">
+                        <h3>IP Geolocation Lookup</h3>
+                        <div class="form-group">
+                            <label for="ip-address">IP Address:</label>
+                            <input type="text" id="ip-address" placeholder="e.g., 8.8.8.8">
+                        </div>
+                        <button class="btn" onclick="geolocateIP()">Lookup IP Location</button>
+                        <div id="ip-result" class="result-box" style="display: none;"></div>
+                    </div>
+
+                    <div class="tool-card">
+                        <h3>DNS Lookup</h3>
+                        <div class="form-group">
+                            <label for="dns-domain">Domain:</label>
+                            <input type="text" id="dns-domain" placeholder="e.g., google.com">
+                        </div>
+                        <button class="btn" onclick="lookupDNS()">Lookup DNS</button>
+                        <div id="dns-result" class="result-box" style="display: none;"></div>
+                    </div>
+
+                    <div class="tool-card">
+                        <h3>Whois Lookup</h3>
+                        <div class="form-group">
+                            <label for="whois-domain">Domain:</label>
+                            <input type="text" id="whois-domain" placeholder="e.g., example.com">
+                        </div>
+                        <button class="btn" onclick="whoisLookup()">Whois Lookup</button>
+                        <div id="whois-result" class="result-box" style="display: none;"></div>
+                    </div>
+
+                    <div class="tool-card">
+                        <h3>Subdomain Finder</h3>
+                        <div class="form-group">
+                            <label for="subdomain-domain">Domain:</label>
+                            <input type="text" id="subdomain-domain" placeholder="e.g., example.com">
+                        </div>
+                        <button class="btn" onclick="findSubdomains()">Find Subdomains</button>
+                        <div id="subdomain-result" class="result-box" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hash Tools Panel -->
+            <div id="hash" class="panel">
+                <h2>#️⃣ Hash & Cryptography Tools</h2>
+                <div class="tool-grid">
+                    <div class="tool-card">
+                        <h3>Hash Generator & Cracker</h3>
+                        <div class="form-group">
+                            <label for="hash-input">Text to Hash:</label>
+                            <textarea id="hash-input" placeholder="Enter text..." style="min-height: 80px;"></textarea>
+                        </div>
+                        <button class="btn" onclick="generateHashes()">Generate Hashes</button>
+                        <div id="hash-result" class="result-box" style="display: none;"></div>
+                    </div>
+
+                    <div class="tool-card">
+                        <h3>Hash Identifier</h3>
+                        <div class="form-group">
+                            <label for="hash-identify">Hash String:</label>
+                            <textarea id="hash-identify" placeholder="Paste hash to identify..." style="min-height: 80px;"></textarea>
+                        </div>
+                        <button class="btn" onclick="identifyHash()">Identify Hash</button>
+                        <div id="identify-result" class="result-box" style="display: none;"></div>
+                    </div>
+
+                    <div class="tool-card">
+                        <h3>Base64 Encoder/Decoder</h3>
+                        <div class="form-group">
+                            <label for="base64-input">Input:</label>
+                            <textarea id="base64-input" placeholder="Text or Base64..." style="min-height: 80px;"></textarea>
+                        </div>
+                        <button class="btn" onclick="encodeBase64()">Encode to Base64</button>
+                        <button class="btn" onclick="decodeBase64()" style="background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); margin-top: 10px;">Decode from Base64</button>
+                        <div id="base64-result" class="result-box" style="display: none;"></div>
+                    </div>
+
+                    <div class="tool-card">
+                        <h3>URL Encoder/Decoder</h3>
+                        <div class="form-group">
+                            <label for="url-input">Input:</label>
+                            <textarea id="url-input" placeholder="URL or text..." style="min-height: 80px;"></textarea>
+                        </div>
+                        <button class="btn" onclick="encodeURL()">Encode URL</button>
+                        <button class="btn" onclick="decodeURL()" style="background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); margin-top: 10px;">Decode URL</button>
+                        <div id="url-result" class="result-box" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Validators Panel -->
+            <div id="validators" class="panel">
+                <h2>✓ Validation Tools</h2>
+                <div class="tool-grid">
+                    <div class="tool-card">
+                        <h3>Email Validator</h3>
+                        <div class="form-group">
+                            <label for="email-input">Email Address:</label>
+                            <input type="email" id="email-input" placeholder="Enter email...">
+                        </div>
+                        <button class="btn" onclick="validateEmail()">Validate Email</button>
+                        <div id="email-result" class="result-box" style="display: none;"></div>
+                    </div>
+
+                    <div class="tool-card">
+                        <h3>Phone Number Validator</h3>
+                        <div class="form-group">
+                            <label for="phone-input">Phone Number:</label>
+                            <input type="text" id="phone-input" placeholder="Enter phone number...">
+                        </div>
+                        <button class="btn" onclick="validatePhone()">Validate Phone</button>
+                        <div id="phone-result" class="result-box" style="display: none;"></div>
+                    </div>
+
+                    <div class="tool-card">
+                        <h3>Credit Card Validator (Luhn)</h3>
+                        <div class="form-group">
+                            <label for="cc-input">Card Number:</label>
+                            <input type="text" id="cc-input" placeholder="Enter card number..." maxlength="19">
+                        </div>
+                        <button class="btn" onclick="validateCreditCard()">Validate Card</button>
+                        <div id="cc-result" class="result-box" style="display: none;"></div>
+                    </div>
+
+                    <div class="tool-card">
+                        <h3>Username Availability</h3>
+                        <div class="form-group">
+                            <label for="username-input">Username:</label>
+                            <input type="text" id="username-input" placeholder="Enter username...">
+                        </div>
+                        <button class="btn" onclick="checkUsername()">Check Availability</button>
+                        <div id="username-result" class="result-box" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Network Tools Panel -->
+            <div id="network" class="panel">
+                <h2>🌐 Network – Milky Way Terminal</h2>
+                <div class="tool-grid">
+                    <div class="tool-card">
+                        <h3>Port Information</h3>
+                        <div class="form-group">
+                            <label for="port-number">Port Number:</label>
+                            <input type="number" id="port-number" placeholder="e.g., 80, 443" min="1" max="65535">
+                        </div>
+                        <button class="btn" onclick="getPortInfo()">Get Port Info</button>
+                        <div id="port-result" class="result-box" style="display: none;"></div>
+                    </div>
+
+                    <div class="tool-card">
+                        <h3>User Agent Parser</h3>
+                        <div class="form-group">
+                            <label for="useragent-input">User Agent:</label>
+                            <textarea id="useragent-input" placeholder="Paste User Agent..." style="min-height: 80px;"></textarea>
+                        </div>
+                        <button class="btn" onclick="parseUserAgent()">Parse User Agent</button>
+                        <div id="useragent-result" class="result-box" style="display: none;"></div>
+                    </div>
+
+                    <div class="tool-card">
+                        <h3>HTTP Headers Inspector</h3>
+                        <div class="form-group">
+                            <label for="header-url">URL:</label>
+                            <input type="text" id="header-url" placeholder="e.g., https://example.com">
+                        </div>
+                        <button class="btn" onclick="inspectHeaders()">Inspect Headers</button>
+                        <div id="header-result" class="result-box" style="display: none;"></div>
+                    </div>
+
+                    <div class="tool-card">
+                        <h3>IP Range Calculator</h3>
+                        <div class="form-group">
+                            <label for="cidr-input">CIDR Notation:</label>
+                            <input type="text" id="cidr-input" placeholder="e.g., 192.168.1.0/24">
+                        </div>
+                        <button class="btn" onclick="calculateCIDR()">Calculate Range</button>
+                        <div id="cidr-result" class="result-box" style="display: none;"></div>
+                    </div>
+
+                    <div class="tool-card">
+                        <h3>🌌 IP Cycler</h3>
+                        <p style="font-size:0.9em; opacity:0.8;">Simulated IP rotation – click to "change" your address.</p>
+                        <button class="btn" onclick="cycleIP()">Change IP</button>
+                        <div id="ip-result" class="result-box" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Encoding/Decoding Panel -->
+            <div id="encoding" class="panel">
+                <h2>🔤 Encoding & Text Tools</h2>
+                <div class="tool-grid">
+                    <div class="tool-card">
+                        <h3>ROT13 Cipher</h3>
+                        <div class="form-group">
+                            <label for="rot13-input">Text:</label>
+                            <textarea id="rot13-input" placeholder="Enter text..." style="min-height: 80px;"></textarea>
+                        </div>
+                        <button class="btn" onclick="applyROT13()">Apply ROT13</button>
+                        <div id="rot13-result" class="result-box" style="display: none;"></div>
+                    </div>
+
+                    <div class="tool-card">
+                        <h3>JSON Formatter</h3>
+                        <div class="form-group">
+                            <label for="json-input">JSON:</label>
+                            <textarea id="json-input" placeholder="Paste JSON..." style="min-height: 80px;"></textarea>
+                        </div>
+                        <button class="btn" onclick="formatJSON()">Format JSON</button>
+                        <div id="json-result" class="result-box" style="display: none;"></div>
+                    </div>
+
+                    <div class="tool-card">
+                        <h3>Hex Converter</h3>
+                        <div class="form-group">
+                            <label for="hex-input">Text or Hex:</label>
+                            <textarea id="hex-input" placeholder="Enter text or hex..." style="min-height: 80px;"></textarea>
+                        </div>
+                        <button class="btn" onclick="textToHex()">Text to Hex</button>
+                        <button class="btn" onclick="hexToText()" style="background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); margin-top: 10px;">Hex to Text</button>
+                        <div id="hex-result" class="result-box" style="display: none;"></div>
+                    </div>
+
+                    <div class="tool-card">
+                        <h3>Case Converter</h3>
+                        <div class="form-group">
+                            <label for="case-input">Text:</label>
+                            <textarea id="case-input" placeholder="Enter text..." style="min-height: 80px;"></textarea>
+                        </div>
+                        <button class="btn" onclick="convertCase('upper')">UPPERCASE</button>
+                        <button class="btn" onclick="convertCase('lower')" style="background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); margin-top: 10px;">lowercase</button>
+                        <button class="btn" onclick="convertCase('title')" style="background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); margin-top: 10px;">Title Case</button>
+                        <div id="case-result" class="result-box" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>🌠 Comet OS Beta • OSINT Panel v1.1 | Professional Security Research Toolkit | Use responsibly for authorized security testing only</p>
+        </div>
+    </div>
+
+    <script>
+        // Panel Navigation
+        function switchPanel(panelName) {
+            // Hide all panels
+            document.querySelectorAll('.panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+
+            // Remove active class from all buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected panel
+            document.getElementById(panelName).classList.add('active');
+
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+
+        // ==================== PASSWORD TOOLS ====================
+        function checkPasswordStrength() {
+            const pwd = document.getElementById('pwd-input').value;
+            const resultDiv = document.getElementById('pwd-result');
+            
+            if (!pwd) {
+                resultDiv.style.display = 'none';
+                document.getElementById('strength-meter-fill').className = 'strength-meter-fill';
+                return;
+            }
+
+            let strength = 0;
+            let feedback = [];
+            const meter = document.getElementById('strength-meter-fill');
+
+            // Length check
+            if (pwd.length >= 8) strength += 20;
+            if (pwd.length >= 12) strength += 10;
+            if (pwd.length >= 16) strength += 10;
+            else feedback.push('Use at least 12 characters');
+
+            // Character variety
+            if (/[a-z]/.test(pwd)) strength += 20;
+            if (/[A-Z]/.test(pwd)) strength += 15;
+            else feedback.push('Add uppercase letters');
+
+            if (/[0-9]/.test(pwd)) strength += 15;
+            else feedback.push('Add numbers');
+
+            if (/[^a-zA-Z0-9]/.test(pwd)) strength += 15;
+            else feedback.push('Add special characters');
+
+            // Pattern checks
+            if (/(.)\1{2,}/.test(pwd)) strength -= 10;
+            if (/^[0-9]+$/.test(pwd)) strength = 10;
+            if (/^[a-z]+$/.test(pwd)) strength = 10;
+
+            strength = Math.min(100, Math.max(0, strength));
+
+            let strengthLabel = '';
+            let strengthClass = '';
+
+            if (strength < 25) {
+                strengthLabel = 'Very Weak';
+                strengthClass = 'strength-weak';
+            } else if (strength < 50) {
+                strengthLabel = 'Weak';
+                strengthClass = 'strength-fair';
+            } else if (strength < 75) {
+                strengthLabel = 'Good';
+                strengthClass = 'strength-good';
+            } else {
+                strengthLabel = 'Strong';
+                strengthClass = 'strength-strong';
+            }
+
+            meter.className = 'strength-meter-fill ' + strengthClass;
+
+            let html = `<strong>Strength: ${strengthLabel} (${strength}%)</strong>`;
+            if (feedback.length > 0) {
+                html += '<br><strong>Suggestions:</strong><ul>';
+                feedback.forEach(f => html += `<li>• ${f}</li>`);
+                html += '</ul>';
+            }
+
+            resultDiv.innerHTML = html;
+            resultDiv.className = 'result-box ' + (strength >= 75 ? 'success' : strength >= 50 ? 'warning' : 'error');
+            resultDiv.style.display = 'block';
+        }
+
+        function generatePassword() {
+            const length = parseInt(document.getElementById('pwd-length').value) || 16;
+            const useUpper = document.getElementById('pwd-uppercase').checked;
+            const useLower = document.getElementById('pwd-lowercase').checked;
+            const useNumbers = document.getElementById('pwd-numbers').checked;
+            const useSymbols = document.getElementById('pwd-symbols').checked;
+
+            let chars = '';
+            if (useUpper) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            if (useLower) chars += 'abcdefghijklmnopqrstuvwxyz';
+            if (useNumbers) chars += '0123456789';
+            if (useSymbols) chars += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
+            if (!chars) {
+                alert('Select at least one character type');
+                return;
+            }
+
+            let password = '';
+            for (let i = 0; i < length; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+
+            const resultDiv = document.getElementById('pwd-generated');
+            resultDiv.innerHTML = `<strong>Generated Password:</strong><br><code style="font-size: 1.1em;">${password}</code><br><button class="btn" onclick="copyToClipboard('${password}')" style="margin-top: 10px;">Copy to Clipboard</button>`;
+            resultDiv.className = 'result-box success';
+            resultDiv.style.display = 'block';
+        }
+
+        function checkBreachDatabase() {
+            const email = document.getElementById('breach-email').value;
+            const resultDiv = document.getElementById('breach-result');
+
+            if (!email) {
+                alert('Enter an email address');
+                return;
+            }
+
+            resultDiv.innerHTML = '<strong>Checking breach database...</strong><br>Note: This tool requires integration with APIs like HaveIBeePwned. In production, integrate real APIs.';
+            resultDiv.className = 'result-box info';
+            resultDiv.style.display = 'block';
+        }
+
+        // ==================== GEO TOOLS ====================
+        function geolocateIP() {
+            const ip = document.getElementById('ip-address').value;
+            const resultDiv = document.getElementById('ip-result');
+
+            if (!ip) {
+                alert('Enter an IP address');
+                return;
+            }
+
+            // Simulated IP geolocation
+            resultDiv.innerHTML = `<strong>IP Geolocation Results for: ${ip}</strong><br>
+<strong>Status:</strong> Demo Mode<br>
+<strong>Note:</strong> Integrate with IP2Location, MaxMind GeoIP2, or similar APIs for real data.<br>
+<br><strong>Typical data retrieved:</strong><br>
+• Country & Region<br>
+• City & Coordinates<br>
+• ISP Information<br>
+• Connection Type<br>
+• Currency & Timezone`;
+            resultDiv.className = 'result-box info';
+            resultDiv.style.display = 'block';
+        }
+
+        function lookupDNS() {
+            const domain = document.getElementById('dns-domain').value;
+            const resultDiv = document.getElementById('dns-result');
+
+            if (!domain) {
+                alert('Enter a domain');
+                return;
+            }
+
+            resultDiv.innerHTML = `<strong>DNS Lookup for: ${domain}</strong><br>
+<strong>Status:</strong> Demo Mode<br>
+<br><strong>Typical DNS Records:</strong><br>
+• A Record (IPv4)<br>
+• AAAA Record (IPv6)<br>
+• MX Record (Mail servers)<br>
+• CNAME Record<br>
+• NS Record<br>
+• TXT Records<br>
+• SOA Record`;
+            resultDiv.className = 'result-box info';
+            resultDiv.style.display = 'block';
+        }
+
+        function whoisLookup() {
+            const domain = document.getElementById('whois-domain').value;
+            const resultDiv = document.getElementById('whois-result');
+
+            if (!domain) {
+                alert('Enter a domain');
+                return;
+            }
+
+            resultDiv.innerHTML = `<strong>WHOIS Data for: ${domain}</strong><br>
+<strong>Status:</strong> Demo Mode<br>
+<br><strong>Information Retrieved:</strong><br>
+• Registrant Information<br>
+• Registration Date<br>
+• Expiration Date<br>
+• Registrar Details<br>
+• Name Servers<br>
+• Administrative Contact<br>
+• Technical Contact`;
+            resultDiv.className = 'result-box info';
+            resultDiv.style.display = 'block';
+        }
+
+        function findSubdomains() {
+            const domain = document.getElementById('subdomain-domain').value;
+            const resultDiv = document.getElementById('subdomain-result');
+
+            if (!domain) {
+                alert('Enter a domain');
+                return;
+            }
+
+            resultDiv.innerHTML = `<strong>Subdomains for: ${domain}</strong><br>
+<strong>Status:</strong> Demo Mode<br>
+<strong>Common subdomains found:</strong><br>
+• www.${domain}<br>
+• mail.${domain}<br>
+• ftp.${domain}<br>
+• api.${domain}<br>
+• admin.${domain}<br>
+• test.${domain}<br>
+<br><strong>Note:</strong> Integrate with Certificate Transparency logs or other subdomain enumeration APIs.`;
+            resultDiv.className = 'result-box success';
+            resultDiv.style.display = 'block';
+        }
+
+        // ==================== HASH TOOLS ====================
+        async function generateHashes() {
+            const input = document.getElementById('hash-input').value;
+            const resultDiv = document.getElementById('hash-result');
+
+            if (!input) {
+                alert('Enter text to hash');
+                return;
+            }
+
+            // Simple hash function simulation
+            const md5 = await hashString(input, 'MD5');
+            const sha1 = await hashString(input, 'SHA-1');
+            const sha256 = await hashString(input, 'SHA-256');
+
+            let html = `<strong>Hashes for: "${input}"</strong><br><br>`;
+            html += `<strong>MD5:</strong><br><code>${md5}</code><br><br>`;
+            html += `<strong>SHA-1:</strong><br><code>${sha1}</code><br><br>`;
+            html += `<strong>SHA-256:</strong><br><code>${sha256}</code>`;
+
+            resultDiv.innerHTML = html;
+            resultDiv.className = 'result-box success';
+            resultDiv.style.display = 'block';
+        }
+
+        async function hashString(str, algorithm) {
+            // Simple hash simulation - in production use crypto-js library
+            const encoder = new TextEncoder();
+            const data = encoder.encode(str);
+            const hashBuffer = await crypto.subtle.digest(algorithm.replace('-', ''), data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        function identifyHash() {
+            const hash = document.getElementById('hash-identify').value.trim();
+            const resultDiv = document.getElementById('identify-result');
+
+            if (!hash) {
+                alert('Enter a hash');
+                return;
+            }
+
+            let hashType = 'Unknown';
+            if (/^[a-f0-9]{32}$/i.test(hash)) hashType = 'MD5 (32 chars)';
+            else if (/^[a-f0-9]{40}$/i.test(hash)) hashType = 'SHA-1 (40 chars)';
+            else if (/^[a-f0-9]{64}$/i.test(hash)) hashType = 'SHA-256 (64 chars)';
+            else if (/^[a-f0-9]{128}$/i.test(hash)) hashType = 'SHA-512 (128 chars)';
+            else if (/^\$1\$/.test(hash)) hashType = 'MD5 Crypt';
+            else if (/^\$2a\$|\$2b\$|\$2y\$/.test(hash)) hashType = 'bcrypt';
+            else if (/^\$6\$/.test(hash)) hashType = 'SHA-512 Crypt';
+
+            resultDiv.innerHTML = `<strong>Hash Type:</strong> ${hashType}<br>
+<strong>Hash Value:</strong><br><code>${hash}</code>`;
+            resultDiv.className = 'result-box info';
+            resultDiv.style.display = 'block';
+        }
+
+        function encodeBase64() {
+            const input = document.getElementById('base64-input').value;
+            const resultDiv = document.getElementById('base64-result');
+
+            if (!input) {
+                alert('Enter text');
+                return;
+            }
+
+            const encoded = btoa(unescape(encodeURIComponent(input)));
+            resultDiv.innerHTML = `<strong>Base64 Encoded:</strong><br><code style="word-break: break-all;">${encoded}</code>`;
+            resultDiv.className = 'result-box success';
+            resultDiv.style.display = 'block';
+        }
+
+        function decodeBase64() {
+            const input = document.getElementById('base64-input').value;
+            const resultDiv = document.getElementById('base64-result');
+
+            if (!input) {
+                alert('Enter Base64');
+                return;
+            }
+
+            try {
+                const decoded = decodeURIComponent(escape(atob(input)));
+                resultDiv.innerHTML = `<strong>Base64 Decoded:</strong><br><code>${decoded}</code>`;
+                resultDiv.className = 'result-box success';
+            } catch {
+                resultDiv.innerHTML = '<strong>Error:</strong> Invalid Base64 string';
+                resultDiv.className = 'result-box error';
+            }
+            resultDiv.style.display = 'block';
+        }
+
+        function encodeURL() {
+            const input = document.getElementById('url-input').value;
+            const resultDiv = document.getElementById('url-result');
+
+            if (!input) {
+                alert('Enter text');
+                return;
+            }
+
+            const encoded = encodeURIComponent(input);
+            resultDiv.innerHTML = `<strong>URL Encoded:</strong><br><code style="word-break: break-all;">${encoded}</code>`;
+            resultDiv.className = 'result-box success';
+            resultDiv.style.display = 'block';
+        }
+
+        function decodeURL() {
+            const input = document.getElementById('url-input').value;
+            const resultDiv = document.getElementById('url-result');
+
+            if (!input) {
+                alert('Enter text');
+                return;
+            }
+
+            try {
+                const decoded = decodeURIComponent(input);
+                resultDiv.innerHTML = `<strong>URL Decoded:</strong><br><code>${decoded}</code>`;
+                resultDiv.className = 'result-box success';
+            } catch {
+                resultDiv.innerHTML = '<strong>Error:</strong> Invalid URL encoding';
+                resultDiv.className = 'result-box error';
+            }
+            resultDiv.style.display = 'block';
+        }
+
+        // ==================== VALIDATORS ====================
+        function validateEmail() {
+            const email = document.getElementById('email-input').value;
+            const resultDiv = document.getElementById('email-result');
+
+            if (!email) {
+                alert('Enter an email');
+                return;
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const isValid = emailRegex.test(email);
+
+            resultDiv.innerHTML = `<strong>Email:</strong> ${email}<br>
+<strong>Status:</strong> ${isValid ? '✓ Valid' : '✗ Invalid'}`;
+            resultDiv.className = isValid ? 'result-box success' : 'result-box error';
+            resultDiv.style.display = 'block';
+        }
+
+        function validatePhone() {
+            const phone = document.getElementById('phone-input').value;
+            const resultDiv = document.getElementById('phone-result');
+
+            if (!phone) {
+                alert('Enter a phone number');
+                return;
+            }
+
+            const phoneRegex = /^[\d\s\-\+\(\)]{7,}$/;
+            const isValid = phoneRegex.test(phone);
+
+            resultDiv.innerHTML = `<strong>Phone:</strong> ${phone}<br>
+<strong>Status:</strong> ${isValid ? '✓ Valid Format' : '✗ Invalid Format'}`;
+            resultDiv.className = isValid ? 'result-box success' : 'result-box error';
+            resultDiv.style.display = 'block';
+        }
+
+        function validateCreditCard() {
+            const cc = document.getElementById('cc-input').value.replace(/\s/g, '');
+            const resultDiv = document.getElementById('cc-result');
+
+            if (!cc) {
+                alert('Enter a card number');
+                return;
+            }
+
+            const isValid = luhnCheck(cc);
+            const cardType = detectCardType(cc);
+
+            resultDiv.innerHTML = `<strong>Card:</strong> ${cc}<br>
+<strong>Type:</strong> ${cardType}<br>
+<strong>Luhn Check:</strong> ${isValid ? '✓ Valid' : '✗ Invalid'}`;
+            resultDiv.className = isValid ? 'result-box success' : 'result-box error';
+            resultDiv.style.display = 'block';
+        }
+
+        function luhnCheck(num) {
+            let sum = 0;
+            let isEven = false;
+            for (let i = num.length - 1; i >= 0; i--) {
+                let digit = parseInt(num[i], 10);
+                if (isEven) digit *= 2;
+                if (digit > 9) digit -= 9;
+                sum += digit;
+                isEven = !isEven;
+            }
+            return sum % 10 === 0;
+        }
+
+        function detectCardType(num) {
+            if (/^4/.test(num)) return 'Visa';
+            if (/^5[1-5]/.test(num)) return 'Mastercard';
+            if (/^3[47]/.test(num)) return 'American Express';
+            if (/^6(?:011|5)/.test(num)) return 'Discover';
+            return 'Unknown';
+        }
+
+        function checkUsername() {
+            const username = document.getElementById('username-input').value;
+            const resultDiv = document.getElementById('username-result');
+
+            if (!username) {
+                alert('Enter a username');
+                return;
+            }
+
+            // Simulate checking platforms
+            const platforms = ['Twitter', 'GitHub', 'Instagram', 'LinkedIn', 'Reddit'];
+            let html = `<strong>Checking username: ${username}</strong><br><br>`;
+            
+            platforms.forEach(platform => {
+                html += `${platform}: <span style="color: #28a745;">✓ Available*</span><br>`;
+            });
+            
+            html += '<br><em>*Simulated results. Integrate real APIs for actual availability.</em>';
+
+            resultDiv.innerHTML = html;
+            resultDiv.className = 'result-box info';
+            resultDiv.style.display = 'block';
+        }
+
+        // ==================== NETWORK TOOLS ====================
+        function getPortInfo() {
+            const port = parseInt(document.getElementById('port-number').value);
+            const resultDiv = document.getElementById('port-result');
+
+            if (!port || port < 1 || port > 65535) {
+                alert('Enter a valid port (1-65535)');
+                return;
+            }
+
+            const commonPorts = {
+                20: 'FTP Data',
+                21: 'FTP Control',
+                22: 'SSH',
+                23: 'Telnet',
+                25: 'SMTP',
+                53: 'DNS',
+                80: 'HTTP',
+                110: 'POP3',
+                143: 'IMAP',
+                443: 'HTTPS',
+                465: 'SMTPS',
+                587: 'SMTP TLS',
+                993: 'IMAPS',
+                995: 'POP3S',
+                3306: 'MySQL',
+                5432: 'PostgreSQL',
+                6379: 'Redis',
+                8080: 'HTTP Alt',
+                8443: 'HTTPS Alt',
+                27017: 'MongoDB'
+            };
+
+            const service = commonPorts[port] || 'Unknown Service';
+            const protocol = port < 1024 ? 'TCP/UDP (Well-known)' : 'TCP/UDP (Registered)';
+
+            resultDiv.innerHTML = `<strong>Port:</strong> ${port}<br>
+<strong>Service:</strong> ${service}<br>
+<strong>Protocol:</strong> ${protocol}<br>
+<strong>Status:</strong> For security testing, requires server to check`;
+            resultDiv.className = 'result-box info';
+            resultDiv.style.display = 'block';
+        }
+
+        function parseUserAgent() {
+            const ua = document.getElementById('useragent-input').value;
+            const resultDiv = document.getElementById('useragent-result');
+
+            if (!ua) {
+                alert('Enter a User Agent');
+                return;
+            }
+
+            let browser = 'Unknown';
+            let os = 'Unknown';
+            let device = 'Unknown';
+
+            if (/Chrome/.test(ua)) browser = 'Chrome';
+            else if (/Firefox/.test(ua)) browser = 'Firefox';
+            else if (/Safari/.test(ua)) browser = 'Safari';
+            else if (/Edge/.test(ua)) browser = 'Edge';
+
+            if (/Windows/.test(ua)) os = 'Windows';
+            else if (/Mac/.test(ua)) os = 'macOS';
+            else if (/Linux/.test(ua)) os = 'Linux';
+            else if (/iPhone/.test(ua)) os = 'iOS';
+            else if (/Android/.test(ua)) os = 'Android';
+
+            resultDiv.innerHTML = `<strong>User Agent:</strong><br><code style="word-break: break-all; font-size: 0.9em;">${ua}</code><br><br>
+<strong>Browser:</strong> ${browser}<br>
+<strong>Operating System:</strong> ${os}`;
+            resultDiv.className = 'result-box info';
+            resultDiv.style.display = 'block';
+        }
+
+        function inspectHeaders() {
+            const url = document.getElementById('header-url').value;
+            const resultDiv = document.getElementById('header-result');
+
+            if (!url) {
+                alert('Enter a URL');
+                return;
+            }
+
+            resultDiv.innerHTML = `<strong>HTTP Headers for: ${url}</strong><br>
+<strong>Status:</strong> Demo Mode<br>
+<br><strong>Note:</strong> Cross-origin restrictions may apply.<br>
+<strong>Common Headers:</strong><br>
+• Content-Type<br>
+• Server<br>
+• Set-Cookie<br>
+• Cache-Control<br>
+• X-Frame-Options<br>
+• X-Content-Type-Options<br>
+• Strict-Transport-Security`;
+            resultDiv.className = 'result-box warning';
+            resultDiv.style.display = 'block';
+        }
+
+        function calculateCIDR() {
+            const cidr = document.getElementById('cidr-input').value;
+            const resultDiv = document.getElementById('cidr-result');
+
+            if (!cidr) {
+                alert('Enter CIDR notation');
+                return;
+            }
+
+            resultDiv.innerHTML = `<strong>CIDR Analysis: ${cidr}</strong><br>
+<br>Example calculation for 192.168.1.0/24:<br>
+• Network: 192.168.1.0<br>
+• Broadcast: 192.168.1.255<br>
+• Usable IPs: 254 (192.168.1.1 - 192.168.1.254)<br>
+• Netmask: 255.255.255.0`;
+            resultDiv.className = 'result-box info';
+            resultDiv.style.display = 'block';
+        }
+
+        // IP Cycler Demo
+        function cycleIP() {
+            const resultDiv = document.getElementById('ip-result');
+            // generate pseudo-random IPv4 address
+            const randomIP = `${randByte()}.${randByte()}.${randByte()}.${randByte()}`;
+            resultDiv.innerHTML = `<strong>New IP:</strong> ${randomIP}<br><em>(demo only – use OS/network tools for real change)</em>`;
+            resultDiv.className = 'result-box info';
+            resultDiv.style.display = 'block';
+        }
+
+        function randByte() {
+            return Math.floor(Math.random() * 256);
+        }
+
+        // ==================== ENCODING TOOLS ====================
+        function applyROT13() {
+            const input = document.getElementById('rot13-input').value;
+            const resultDiv = document.getElementById('rot13-result');
+
+            if (!input) {
+                alert('Enter text');
+                return;
+            }
+
+            const output = input.replace(/[a-zA-Z]/g, char => 
+                String.fromCharCode((char <= 'Z' ? 90 : 122) >= (char = char.charCodeAt(0) + 13) ? char : char - 26)
+            );
+
+            resultDiv.innerHTML = `<strong>ROT13 Output:</strong><br><code>${output}</code>`;
+            resultDiv.className = 'result-box success';
+            resultDiv.style.display = 'block';
+        }
+
+        function formatJSON() {
+            const input = document.getElementById('json-input').value;
+            const resultDiv = document.getElementById('json-result');
+
+            if (!input) {
+                alert('Enter JSON');
+                return;
+            }
+
+            try {
+                const parsed = JSON.parse(input);
+                const formatted = JSON.stringify(parsed, null, 2);
+                resultDiv.innerHTML = `<strong>Formatted JSON:</strong><br><code style="font-size: 0.9em; word-break: break-all;">${formatted}</code>`;
+                resultDiv.className = 'result-box success';
+            } catch {
+                resultDiv.innerHTML = '<strong>Error:</strong> Invalid JSON format';
+                resultDiv.className = 'result-box error';
+            }
+            resultDiv.style.display = 'block';
+        }
+
+        function textToHex() {
+            const input = document.getElementById('hex-input').value;
+            const resultDiv = document.getElementById('hex-result');
+
+            if (!input) {
+                alert('Enter text');
+                return;
+            }
+
+            let hex = '';
+            for (let i = 0; i < input.length; i++) {
+                hex += input.charCodeAt(i).toString(16).padStart(2, '0') + ' ';
+            }
+
+            resultDiv.innerHTML = `<strong>Hex Output:</strong><br><code style="word-break: break-all;">${hex}</code>`;
+            resultDiv.className = 'result-box success';
+            resultDiv.style.display = 'block';
+        }
+
+        function hexToText() {
+            const input = document.getElementById('hex-input').value;
+            const resultDiv = document.getElementById('hex-result');
+
+            if (!input) {
+                alert('Enter hex');
+                return;
+            }
+
+            try {
+                const hexArray = input.split(/\s+/).filter(h => h);
+                let text = '';
+                hexArray.forEach(hex => {
+                    text += String.fromCharCode(parseInt(hex, 16));
+                });
+                resultDiv.innerHTML = `<strong>Text Output:</strong><br><code>${text}</code>`;
+                resultDiv.className = 'result-box success';
+            } catch {
+                resultDiv.innerHTML = '<strong>Error:</strong> Invalid hex format';
+                resultDiv.className = 'result-box error';
+            }
+            resultDiv.style.display = 'block';
+        }
+
+        function convertCase(type) {
+            const input = document.getElementById('case-input').value;
+            const resultDiv = document.getElementById('case-result');
+
+            if (!input) {
+                alert('Enter text');
+                return;
+            }
+
+            let output = '';
+            switch(type) {
+                case 'upper':
+                    output = input.toUpperCase();
+                    break;
+                case 'lower':
+                    output = input.toLowerCase();
+                    break;
+                case 'title':
+                    output = input.replace(/\b\w/g, char => char.toUpperCase());
+                    break;
+            }
+
+            resultDiv.innerHTML = `<strong>Converted Text:</strong><br><code>${output}</code>`;
+            resultDiv.className = 'result-box success';
+            resultDiv.style.display = 'block';
+        }
+
+        // Utility function
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard!');
+            });
+        }
+    </script>
+</body>
+</html>
